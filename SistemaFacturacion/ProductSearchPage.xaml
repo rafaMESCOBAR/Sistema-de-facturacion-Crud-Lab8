@@ -16,7 +16,16 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Gestión de Productos" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="Gestión de Productos" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+
+            <Button Grid.Column="1" x:Name="btnNew" Content="Nuevo Producto" Width="120" Click="btnNew_Click"/>
+        </Grid>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Filtrar por nombre:" VerticalAlignment="Center" Margin="0,0,10,0"/>
@@ -25,20 +34,31 @@
             <Button x:Name="btnClear" Content="Limpiar" Width="80" Margin="10,0,0,0" Click="btnClear_Click"/>
         </StackPanel>
 
-        <DataGrid Grid.Row="2" x:Name="dgProducts" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,0,10">
+        <DataGrid Grid.Row="2" x:Name="dgProducts" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,0,0,10" 
+                  SelectionMode="Single" SelectionChanged="dgProducts_SelectionChanged">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding ProductId}" Width="50"/>
                 <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*"/>
                 <DataGridTextColumn Header="Precio" Binding="{Binding Price, StringFormat=C}" Width="100"/>
                 <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="80"/>
+                <DataGridTemplateColumn Header="Acciones" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Editar" Width="70" Click="btnEdit_Click" Margin="0,0,5,0"/>
+                                <Button Content="Eliminar" Width="70" Click="btnDelete_Click"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal">
             <TextBlock Text="Valor Total del Inventario:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
-            <TextBlock x:Name="txtTotalValue" VerticalAlignment="Center"/>
+            <TextBlock x:Name="txtTotalValue" VerticalAlignment="Center" Margin="0,0,20,0"/>
 
-            <TextBlock Text="Productos con Bajo Stock:" VerticalAlignment="Center" Margin="20,0,10,0" FontWeight="Bold"/>
+            <TextBlock Text="Productos con Bajo Stock:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
             <TextBlock x:Name="txtLowStock" VerticalAlignment="Center"/>
         </StackPanel>
     </Grid>

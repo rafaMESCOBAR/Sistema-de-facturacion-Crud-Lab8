@@ -20,22 +20,23 @@ namespace SistemaFacturacion
     public partial class ProductPage : Page
     {
         private NegocioProduct negocioProduct = new NegocioProduct();
+        private Product selectedProduct;
 
         public ProductPage()
         {
             InitializeComponent();
-            // No cargar productos automáticamente
-            // En lugar de eso, mostrar una lista vacía o un mensaje
-            dgProducts.ItemsSource = new List<Product>(); // Lista vacía inicial
             UpdateStatistics();
         }
 
-        private void LoadProducts(string filterText)
+        private void LoadProducts(string filterText = null)
         {
             try
             {
-                // Solo cargar productos si hay un filtro
-                if (!string.IsNullOrWhiteSpace(filterText))
+                if (string.IsNullOrWhiteSpace(filterText))
+                {
+                    dgProducts.ItemsSource = new List<Product>();
+                }
+                else
                 {
                     List<Product> products = negocioProduct.GetProducts(filterText);
                     dgProducts.ItemsSource = products;
@@ -51,11 +52,9 @@ namespace SistemaFacturacion
         {
             try
             {
-                // Mostrar el valor total del inventario (esto podría ser calculado sin cargar todos los productos)
                 decimal totalValue = negocioProduct.CalculateTotalInventoryValue();
                 txtTotalValue.Text = totalValue.ToString("C");
 
-                // Mostrar la cantidad de productos con bajo stock
                 List<Product> lowStockProducts = negocioProduct.GetLowStockProducts();
                 txtLowStock.Text = lowStockProducts.Count.ToString() + " productos";
             }
@@ -88,8 +87,100 @@ namespace SistemaFacturacion
         private void btnClear_Click(object sender, RoutedEventArgs e)
         {
             txtFilter.Text = "";
-            // Limpiar la grilla en lugar de cargar todos los productos
             dgProducts.ItemsSource = new List<Product>();
+        }
+
+        private void dgProducts_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            selectedProduct = dgProducts.SelectedItem as Product;
+        }
+
+        private void btnNew_Click(object sender, RoutedEventArgs e)
+        {
+            ProductForm productForm = new ProductForm();
+            bool? result = productForm.ShowDialog();
+
+            if (result == true)
+            {
+                // Si el filtro tiene texto, recargar la búsqueda
+                if (!string.IsNullOrWhiteSpace(txtFilter.Text))
+                {
+                    LoadProducts(txtFilter.Text);
+                }
+
+                UpdateStatistics();
+            }
+        }
+
+        private void btnEdit_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            if (btn != null)
+            {
+                Product product = btn.DataContext as Product;
+                if (product != null)
+                {
+                    ProductForm productForm = new ProductForm(product.ProductId);
+                    bool? result = productForm.ShowDialog();
+
+                    if (result == true)
+                    {
+                        // Si el filtro tiene texto, recargar la búsqueda
+                        if (!string.IsNullOrWhiteSpace(txtFilter.Text))
+                        {
+                            LoadProducts(txtFilter.Text);
+                        }
+
+                        UpdateStatistics();
+                    }
+                }
+            }
+        }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Button btn = sender as Button;
+                if (btn != null)
+                {
+                    Product product = btn.DataContext as Product;
+                    if (product != null)
+                    {
+                        MessageBoxResult messageResult = MessageBox.Show(
+                            $"¿Está seguro que desea eliminar el producto '{product.Name}'?",
+                            "Confirmar eliminación",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+
+                        if (messageResult == MessageBoxResult.Yes)
+                        {
+                            bool success = negocioProduct.DeleteProduct(product.ProductId);
+
+                            if (success)
+                            {
+                                MessageBox.Show("Producto eliminado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                                // Si el filtro tiene texto, recargar la búsqueda
+                                if (!string.IsNullOrWhiteSpace(txtFilter.Text))
+                                {
+                                    LoadProducts(txtFilter.Text);
+                                }
+
+                                UpdateStatistics();
+                            }
+                            else
+                            {
+                                MessageBox.Show("No se pudo eliminar el producto", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error al eliminar el producto: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
